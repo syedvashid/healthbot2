@@ -1,0 +1,15 @@
+2025-04-23 11:48:15 | User: hello
+2025-04-23 11:48:15 | Bot: I'm a health assistant. Please describe your symptoms clearly.
+
+2025-04-23 11:48:21 | User: feaver
+2025-04-23 11:48:21 | Bot: I'm a health assistant. Please describe your symptoms clearly.
+
+2025-04-23 12:03:33 | User: vahisd
+2025-04-23 12:03:33 | Bot: I'm a health assistant. Please describe your symptoms clearly.
+
+2025-04-23 12:03:47 | User: feaver
+2025-04-23 12:03:47 | Bot: I'm a health assistant. Please describe your symptoms clearly.
+
+2025-04-23 12:20:11 | User: fkj
+2025-04-23 12:20:11 | Bot: I'm a health assistant. Please describe your symptoms clearly.
+

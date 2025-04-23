@@ -5,3 +5,7 @@ transformers
 torch 
 sentencepiece
 geopy
+
+
+reportlab  # For PDF generation
+pytz    
