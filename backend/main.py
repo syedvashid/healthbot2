@@ -1,41 +1,63 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import openai
+import requests
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
 
-# Configure CORS
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
     allow_methods=["*"],
 )
 
-# Load OpenAI key (create a .env file with OPENAI_KEY="your-api-key")
-openai.api_key = os.getenv("OPENAI_KEY")
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")  # Uses your key from .env
 
-class HealthReport(BaseModel):
-    conditions: list
-    recommendations: list
-    emergency: bool
+class Conversation(BaseModel):
+    user_input: str
+    history: list = []
 
-@app.get("/analyze")
-async def analyze_health(question: str):
-    """Uses LLM to analyze health queries"""
+def query_deepseek(prompt: str) -> dict:
+    """Send prompt to DeepSeek API and return parsed JSON"""
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,  # More deterministic medical responses
+        "response_format": {"type": "json_object"}
+    }
+
+    try:
+        print("Payload:", payload)  # Debugging
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+        print("Response Status Code:", response.status_code)  # Debugging
+        print("Response Content:", response.text)  # Debugging
+        response.raise_for_status()
+        return eval(response.json()["choices"][0]["message"]["content"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DeepSeek API error: {str(e)}")
+
+@app.post("/analyze")
+async def analyze_symptoms(conv: Conversation):
     prompt = f"""
-    As a medical assistant, analyze this symptom: '{question}'. 
+    [Medical Assistant Task]
+    Analyze this symptom: {conv.user_input}
+    Conversation History: {conv.history}
+
     Return JSON with:
-    1. "conditions": [top 3 possible conditions],
-    2. "recommendations": [personalized advice],
-    3. "emergency": boolean (true if needs urgent care)
+    - "analysis": "brief summary",
+    - "questions": ["follow-up question 1", "question 2"],
+    - "action": "monitor|urgent_care" 
     """
     
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3  # Lower = more deterministic
-    )
-    
-    return eval(response.choices[0].message.content)  # Converts JSON string to dict
+    return query_deepseek(prompt)
